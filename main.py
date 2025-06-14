@@ -20,6 +20,11 @@ class Player:
         self.width = 20
         self.height = 30
         self.speed = 5
+        try:
+            img = pygame.image.load("Pixel-Art Geschäftsmann im Anzug.png").convert_alpha()
+            self.image = pygame.transform.scale(img, (self.width, self.height))
+        except (pygame.error, FileNotFoundError):
+            self.image = None
 
     def update(self, keys):
         if keys[pygame.K_LEFT]:
@@ -29,8 +34,11 @@ class Player:
         self.x = max(0, min(WIDTH - self.width, self.x))
 
     def draw(self, surface):
-        rect = pygame.Rect(self.x, self.y - self.height, self.width, self.height)
-        pygame.draw.rect(surface, BLACK, rect)
+        if self.image:
+            surface.blit(self.image, (self.x, self.y - self.height))
+        else:
+            rect = pygame.Rect(self.x, self.y - self.height, self.width, self.height)
+            pygame.draw.rect(surface, BLACK, rect)
 
 class Tree:
     def __init__(self, x, base_y):

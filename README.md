@@ -2,8 +2,14 @@
 
 A small demo game using Pygame. It draws a pixel forest and some helicopters
 that fly back and forth. A simple player character can now run through the
-forest while dropping quips in the style of Christoph Gröner. No external assets
-are required.
+forest while dropping quips in the style of Christoph Gröner.
+
+Optionally, you can add a sprite named `Pixel-Art Geschäftsmann im Anzug.png`
+in the game directory. If present, it will be used as the player's image. The
+file itself is not included in this repository. You can download a suitable
+image from an external source (for example:
+`https://example.com/pixel-art-businessman.png`) and place it next to
+`main.py`.
 
 ## Requirements
 
