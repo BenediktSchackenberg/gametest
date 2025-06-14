@@ -20,25 +20,34 @@ class Player:
         self.width = 20
         self.height = 30
         self.speed = 5
+        self.hidden = False
         try:
             img = pygame.image.load("Pixel-Art Geschäftsmann im Anzug.png").convert_alpha()
             self.image = pygame.transform.scale(img, (self.width, self.height))
         except (pygame.error, FileNotFoundError):
             self.image = None
 
-    def update(self, keys):
+    def update(self, keys, trees):
         if keys[pygame.K_LEFT]:
             self.x -= self.speed
         if keys[pygame.K_RIGHT]:
             self.x += self.speed
         self.x = max(0, min(WIDTH - self.width, self.x))
 
+        self.hidden = False
+        if keys[pygame.K_DOWN]:
+            for tree in trees:
+                if abs(self.x - tree.x) < tree.width:
+                    self.hidden = True
+                    break
+
     def draw(self, surface):
-        if self.image:
-            surface.blit(self.image, (self.x, self.y - self.height))
-        else:
-            rect = pygame.Rect(self.x, self.y - self.height, self.width, self.height)
-            pygame.draw.rect(surface, BLACK, rect)
+        if not self.hidden:
+            if self.image:
+                surface.blit(self.image, (self.x, self.y - self.height))
+            else:
+                rect = pygame.Rect(self.x, self.y - self.height, self.width, self.height)
+                pygame.draw.rect(surface, BLACK, rect)
 
 class Tree:
     def __init__(self, x, base_y):
@@ -75,6 +84,26 @@ class Helicopter:
         rotor_offset = 10 if tick % 20 < 10 else -10
         pygame.draw.line(surface, BLACK, (self.x + 20 - 15, self.y - 10), (self.x + 20 + 15, self.y - 10 + rotor_offset), 2)
 
+
+class DebtCollector:
+    def __init__(self):
+        self.x = 0
+        self.y = HEIGHT - 50
+        self.speed = 2
+        self.direction = 1
+
+    def update(self):
+        self.x += self.speed * self.direction
+        if self.x < 0 or self.x > WIDTH - 20:
+            self.direction *= -1
+
+    def sees_player(self, player):
+        return abs(self.x - player.x) < 40 and not player.hidden
+
+    def draw(self, surface):
+        rect = pygame.Rect(self.x, self.y - 20, 20, 20)
+        pygame.draw.rect(surface, (255, 0, 0), rect)
+
 def main():
     pygame.init()
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
@@ -84,6 +113,7 @@ def main():
     trees = [Tree(x, HEIGHT - 20) for x in range(20, WIDTH, 40)]
     helicopters = [Helicopter() for _ in range(3)]
     player = Player()
+    debt_collector = DebtCollector()
 
     sayings = [
         "Das ist Wachstum, meine Freunde!",
@@ -116,7 +146,8 @@ def main():
                 running = False
 
         keys = pygame.key.get_pressed()
-        player.update(keys)
+        player.update(keys, trees)
+        debt_collector.update()
 
         if (keys[pygame.K_LEFT] or keys[pygame.K_RIGHT]) and say_timer == 0:
             current_saying = random.choice(sayings)
@@ -131,6 +162,16 @@ def main():
         for heli in helicopters:
             heli.update()
             heli.draw(screen, tick)
+
+        debt_collector.draw(screen)
+
+        if debt_collector.sees_player(player):
+            text = font.render("Gefasst! Deine Schulden finden dich.", True, BLACK)
+            screen.blit(text, (WIDTH//2 - text.get_width()//2, HEIGHT//2))
+            pygame.display.flip()
+            pygame.time.wait(2000)
+            running = False
+            continue
 
         player.draw(screen)
 
